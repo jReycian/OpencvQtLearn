@@ -7,10 +7,18 @@
 using namespace std;
 using namespace cv;
 
+Mat img;
+vector<vector<int>> newPoint;
+
+vector<vector<int>> myColor {{154,94,147,179,255,255}, //blue
+                             {91,57,76,116,255,255}}; // red
+vector<Scalar> myColorValues {{0, 0, 255}, // blue
+                              {255, 0, 0}}; // red
+
 void callImage()
 {
     string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\test.bmp";
-    Mat img = imread(path);
+    img = imread(path);
     Mat img2;
 
     resize(img, img2, Size(), 0.5, 0.5);
@@ -24,7 +32,7 @@ void callVideoFile()
 
     string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\Robot.MP4";
     VideoCapture cap(path);
-    Mat img, img2;
+    Mat img2;
 
     while (true)
     {
@@ -55,7 +63,7 @@ void callCamera()
 void callImagePreprocess()
 {
     string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\leo.jpg";
-    Mat img = imread(path);
+    img = imread(path);
     Mat imgGray, imgBlur, imgCanny, imgDil, imgErode;
 
     cvtColor(img, imgGray, COLOR_BGR2GRAY);
@@ -79,7 +87,7 @@ void callImagePreprocess()
 void imageResize() // Resize and Crop
 {
     string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\leo.jpg";
-    Mat img = imread(path);
+    img = imread(path);
     Mat imgResize, imgCrop;
 
     cout << img.size << endl;
@@ -115,7 +123,7 @@ Mat matrix, imgWarp;
 void warpPerspective()
 {
     string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\cards.jpg";
-    Mat img = imread(path);
+    img = imread(path);
 
     Point2f src[4] = {{40, 214}, {227, 183}, {57, 424}, {271, 382}};
     Point2f dst[4] = {{0.0f, 0.0f}, {w, 0.0f}, {0.0f, h}, {w, h}};
@@ -140,7 +148,7 @@ void colorDetection()
     int hmax = 179, smax = 255, vmax = 255;
 
     string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\color.jpg";
-    Mat img = imread(path);
+    img = imread(path);
     Mat imgHSV, mask;
 
     cvtColor(img, imgHSV, COLOR_BGR2HSV);
@@ -230,7 +238,7 @@ void getContour(Mat imgDil, Mat img)
 void ShapeDetection()
 {
     string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\color.jpg";
-    Mat img = imread(path);
+    img = imread(path);
     Mat imgGray, imgBlur, imgCanny, imgDil;
 
     // Preprocessing
@@ -251,6 +259,94 @@ void ShapeDetection()
     waitKey(0);
 }
 
+Point getPainterContour(Mat imgDil)
+{
+    vector<vector<Point>> contours;
+    vector<Vec4i> hierarchy;
+
+    findContours(imgDil, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    //    drawContours(img, contours, -1, Scalar(255, 0, 255), 2);
+
+    vector<vector<Point>> conPoly(contours.size());
+    vector<Rect> boundRect(contours.size());
+
+    Point myPoint(0,0);
+
+    for (int i = 0; i < contours.size(); i++)
+    {
+        int area = contourArea(contours[i]);
+        cout << area << endl;
+
+        if (area > 1000)
+        {
+            float peri = arcLength(contours[i], true);
+            approxPolyDP(contours[i], conPoly[i], 0.01 * peri, true);
+
+            cout << conPoly[i].size() << endl;
+            boundRect[i] = boundingRect(conPoly[i]);
+            myPoint.x = boundRect[i].x + boundRect[i].width / 2;
+            myPoint.y = boundRect[i].y;
+
+            drawContours(img, conPoly, i, Scalar(255, 0, 255), 2);
+            rectangle(img, boundRect[i].tl(), boundRect[i].br(), Scalar(0, 255, 0), 2);
+        }
+    }
+    return myPoint;
+}
+
+vector<vector<int>> findColor(Mat img)
+{
+    Mat imgHSV;
+    cvtColor(img, imgHSV, COLOR_BGR2HSV);
+
+    for (int i = 0; i < myColor.size(); i++)
+    {
+        Scalar lower(myColor[i][0], myColor[i][1], myColor[i][2]);
+        Scalar upper(myColor[i][3], myColor[i][4], myColor[i][5]);
+        Mat mask;
+        inRange(imgHSV, lower, upper, mask);
+        string name = to_string(i);
+        if (name == "0")
+        {
+            name  = "blue";
+        }
+        else if (name == "1")
+        {
+            name = "red";
+        }
+        //        imshow(name, mask);
+        Point myPoint = getPainterContour(mask);
+        if (myPoint.x != 0 && myPoint.y != 0)
+        {
+            newPoint.push_back({myPoint.x, myPoint.y, i});
+        }
+    }
+    return newPoint;
+}
+
+void drawOnCanvas(vector<vector<int>> newPoint, vector<Scalar> myColorValues)
+{
+    for (int i = 0; i < newPoint.size(); i++)
+    {
+        circle(img, Point(newPoint[i][0], newPoint[i][1]), 10, myColorValues[newPoint[i][2]], FILLED);
+    }
+}
+
+void virtualPainter()
+{
+    VideoCapture cap(0);
+
+    while (true)
+    {
+        cap.read(img);
+        newPoint = findColor(img);
+        drawOnCanvas(newPoint, myColorValues);
+
+        imshow("Camera", img);
+        waitKey(1);
+    }
+}
+
 int main (){
 
     //    callImage();
@@ -261,7 +357,8 @@ int main (){
     //    drawShapes();
     //    warpPerspective();
     //    colorDetection();
-    ShapeDetection();
+    //    ShapeDetection();
+    virtualPainter();
 
     return 0;
 }
