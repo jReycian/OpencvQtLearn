@@ -169,6 +169,88 @@ void colorDetection()
 
 }
 
+void getContour(Mat imgDil, Mat img)
+{
+    vector<vector<Point>> contours;
+    vector<Vec4i> hierarchy;
+
+    findContours(imgDil, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    //    drawContours(img, contours, -1, Scalar(255, 0, 255), 2);
+
+    vector<vector<Point>> conPoly(contours.size());
+    vector<Rect> boundRect(contours.size());
+
+    for (int i = 0; i < contours.size(); i++)
+    {
+        int area = contourArea(contours[i]);
+        cout << area << endl;
+
+        string objectType;
+
+        if (area > 1000)
+        {
+            float peri = arcLength(contours[i], true);
+            approxPolyDP(contours[i], conPoly[i], 0.01 * peri, true);
+
+            cout << conPoly[i].size() << endl;
+            boundRect[i] = boundingRect(conPoly[i]);
+
+            int shape = (int) conPoly[i].size();
+
+            if (shape == 3)
+                objectType = "Tringle";
+            else if (shape == 4)
+            {
+                float aspRatio = (float) boundRect[i].width / (float) boundRect[i].height;
+                cout << aspRatio << endl;
+                if (aspRatio > 0.98 && aspRatio < 1.05)
+                {
+                    objectType = "Square";
+                }
+                else
+                {
+                    objectType = "Rectangle";
+                }
+            }
+            else if (shape == 5)
+                objectType = "Pentagon";
+            else if (shape == 6)
+                objectType = "Hexagon";
+            else if (shape > 6)
+                objectType = "Circle";
+
+            drawContours(img, conPoly, i, Scalar(255, 0, 255), 2);
+            rectangle(img, boundRect[i].tl(), boundRect[i].br(), Scalar(0, 255, 0), 2);
+            putText(img, objectType, {boundRect[i].x, boundRect[i].y - 5}, FONT_HERSHEY_PLAIN, 1, Scalar(0, 69, 255), 1);
+
+        }
+    }
+}
+
+void ShapeDetection()
+{
+    string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\color.jpg";
+    Mat img = imread(path);
+    Mat imgGray, imgBlur, imgCanny, imgDil;
+
+    // Preprocessing
+    cvtColor(img, imgGray, COLOR_BGRA2GRAY);
+    GaussianBlur(imgGray, imgBlur, Size(3, 3), 3, 0);
+    Canny(imgBlur, imgCanny, 25, 75);
+
+    Mat kernel = getStructuringElement(MORPH_RECT, Size(3, 3));
+    dilate(imgCanny, imgDil, kernel);
+
+    getContour(imgDil, img);
+
+    imshow("Image", img);
+    //    imshow("Image Gray", imgGray);
+    //    imshow("Image Blur", imgBlur);
+    //    imshow("Image Canny", imgCanny);
+    //    imshow("Image Dilate", imgDil);
+    waitKey(0);
+}
+
 int main (){
 
     //    callImage();
@@ -178,7 +260,8 @@ int main (){
     //    imageResize();
     //    drawShapes();
     //    warpPerspective();
-    colorDetection();
+    //    colorDetection();
+    ShapeDetection();
 
     return 0;
 }
