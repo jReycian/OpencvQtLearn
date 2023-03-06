@@ -198,7 +198,7 @@ void getContour(Mat imgDil, Mat img)
             int shape = (int) conPoly[i].size();
 
             if (shape == 3)
-                objectType = "Tringle";
+                objectType = "Triangle";
             else if (shape == 4)
             {
                 float aspRatio = (float) boundRect[i].width / (float) boundRect[i].height;
@@ -221,7 +221,7 @@ void getContour(Mat imgDil, Mat img)
 
             drawContours(img, conPoly, i, Scalar(255, 0, 255), 2);
             rectangle(img, boundRect[i].tl(), boundRect[i].br(), Scalar(0, 255, 0), 2);
-            putText(img, objectType, {boundRect[i].x, boundRect[i].y - 5}, FONT_HERSHEY_PLAIN, 1, Scalar(0, 69, 255), 1);
+            putText(img, objectType, {boundRect[i].x, boundRect[i].y - 5}, FONT_HERSHEY_PLAIN, 1, Scalar(0, 69, 255), 2);
 
         }
     }
