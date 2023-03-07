@@ -1,6 +1,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/objdetect.hpp>
 
 #include <iostream>
 
@@ -287,8 +288,8 @@ Point getPainterContour(Mat imgDil)
             myPoint.x = boundRect[i].x + boundRect[i].width / 2;
             myPoint.y = boundRect[i].y;
 
-            drawContours(img, conPoly, i, Scalar(255, 0, 255), 2);
-            rectangle(img, boundRect[i].tl(), boundRect[i].br(), Scalar(0, 255, 0), 2);
+//            drawContours(img, conPoly, i, Scalar(255, 0, 255), 2);
+//            rectangle(img, boundRect[i].tl(), boundRect[i].br(), Scalar(0, 255, 0), 2);
         }
     }
     return myPoint;
@@ -347,6 +348,31 @@ void virtualPainter()
     }
 }
 
+void faceMaskDetection()
+{
+    string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\me.jpg";
+    img = imread(path);
+
+    CascadeClassifier  faceCascade;
+    faceCascade.load("C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\haarcascades\\haarcascade_frontalface_alt.xml");
+
+    if (faceCascade.empty())
+    {
+        cout << "XML cannot loaded" << endl;
+    }
+
+    vector<Rect> faces;
+    faceCascade.detectMultiScale(img, faces, 1.1, 1.0);
+
+    for (int i = 0; i < faces.size(); i++)
+    {
+        rectangle(img, faces[i].tl(), faces[i].br(), Scalar(255, 0, 255), 3);
+    }
+
+    imshow("Image", img);
+    waitKey(0);
+}
+
 int main (){
 
     //    callImage();
@@ -358,7 +384,8 @@ int main (){
     //    warpPerspective();
     //    colorDetection();
     //    ShapeDetection();
-    virtualPainter();
+    //    virtualPainter();
+    faceMaskDetection();
 
     return 0;
 }
