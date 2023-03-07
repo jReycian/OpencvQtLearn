@@ -350,27 +350,34 @@ void virtualPainter()
 
 void faceMaskDetection()
 {
-    string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\me.jpg";
-    img = imread(path);
+//    string path = "C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\me.jpg";
+//    img = imread(path);
+    VideoCapture cap(0);
+
 
     CascadeClassifier  faceCascade;
-    faceCascade.load("C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\haarcascades\\haarcascade_frontalface_alt.xml");
+    faceCascade.load("C:\\Users\\MinebeaMitsumi\\Desktop\\OpenCVLearn\\OpenCVCourseQT\\Resources\\haarcascades\\haarcascade_frontalface_default.xml");
 
     if (faceCascade.empty())
     {
         cout << "XML cannot loaded" << endl;
     }
 
-    vector<Rect> faces;
-    faceCascade.detectMultiScale(img, faces, 1.1, 1.0);
+    while (true) {
+        cap.read(img);
+        vector<Rect> faces;
+        faceCascade.detectMultiScale(img, faces, 1.1, 10);
 
-    for (int i = 0; i < faces.size(); i++)
-    {
-        rectangle(img, faces[i].tl(), faces[i].br(), Scalar(255, 0, 255), 3);
+        for (int i = 0; i < faces.size(); i++)
+        {
+            rectangle(img, faces[i].tl(), faces[i].br(), Scalar(76, 255, 0), 2);
+            putText(img, "Face", {faces[i].x, faces[i].y - 5}, FONT_HERSHEY_PLAIN, 1, Scalar(76, 255, 0), 2);
+        }
+
+        imshow("Image", img);
+        waitKey(1);
     }
 
-    imshow("Image", img);
-    waitKey(0);
 }
 
 int main (){
